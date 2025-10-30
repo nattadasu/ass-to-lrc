@@ -277,3 +277,49 @@ Be respectful and inclusive. We're all here to learn and build something great t
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
+
+## Pre-commit Hook Performance
+
+### Speed Optimizations
+
+The project is configured for fast pre-commit hooks:
+
+- **Local tools**: mypy and markdownlint run as local system commands (faster than downloading)
+- **Ruff**: Extremely fast linter/formatter written in Rust
+- **Minimal hooks**: Only essential checks enabled
+
+### Skip Hooks (when needed)
+
+```bash
+# Skip all hooks
+git commit --no-verify -m "message"
+
+# Skip specific hook
+SKIP=mypy git commit -m "message"
+
+# Skip multiple hooks
+SKIP=mypy,markdownlint git commit -m "message"
+```
+
+### Run Hooks Manually
+
+```bash
+# Run on all files
+task pre-commit
+
+# Run on staged files only
+uv run pre-commit run
+
+# Run specific hook
+uv run pre-commit run mypy
+
+# Run on specific files
+uv run pre-commit run --files file1.py file2.py
+```
+
+### Performance Tips
+
+1. **Stage changes incrementally**: Smaller diffs = faster hooks
+2. **Use local system tools**: Already configured for mypy and markdownlint
+3. **Skip when iterating**: Use `--no-verify` during rapid development
+4. **Update pre-commit**: `task pre-commit-update` for latest optimizations
