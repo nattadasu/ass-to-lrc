@@ -64,7 +64,7 @@ tasks:
   lint-md:
     desc: Lint markdown files
     cmds:
-      - markdownlint README.md TESTING.md PUBLISHING.md CONTRIBUTING.md
+      - markdownlint README.md TESTING.md PUBLISHING.md CONTRIBUTING.md GEMINI.md
 
   lint-md-fix:
     desc: Fix markdown linting issues
