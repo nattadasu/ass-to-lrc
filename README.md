@@ -33,65 +33,98 @@ ass2lrc convert input.ass
 # Outputs: input.elrc
 ```
 
-### Convert Command
+### Commands
+
+#### `convert` - Convert ASS to LRC
+
+Convert ASS subtitle files to LRC lyrics format.
 
 ```bash
-# Generate simple LRC without word timing
-ass2lrc convert input.ass --simple
-
-# Specify output file
-ass2lrc convert input.ass -o output.lrc
-
-# Customize line gap (default: 1.0 second)
-ass2lrc convert input.ass --gap 0.5
-
-# Use compact format (multiple timestamps per line for repeated lyrics)
-# Warning: Not all players support compact format!
-ass2lrc convert input.ass --compact
-
-# Show version
-ass2lrc --version
-
-# Show help
-ass2lrc --help
+ass2lrc convert [OPTIONS] INPUT_FILE
 ```
 
-### Expand Command
+**Arguments:**
 
-Convert compact LRC to standard sorted format:
+- `INPUT_FILE` - Path to input ASS file (required)
+
+**Options:**
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--output` | `-o` | Output LRC file path | Same as input with `.lrc`/`.elrc` extension |
+| `--enhanced` | `-e` | Generate enhanced LRC with word timing | `enabled` |
+| `--simple` | `-s` | Generate simple LRC (line timing only) | `disabled` |
+| `--compact` | `-c` | Use compact format (multiple timestamps per line) | `disabled` |
+| `--gap` | `-g` | Gap in seconds between lines (≥0.0) | `1.0` |
+| `--version` | `-v` | Show version and exit | - |
+| `--help` | | Show help message | - |
+
+**Examples:**
 
 ```bash
-# Expand compact LRC file
+# Convert to enhanced LRC (default)
+ass2lrc convert song.ass
+
+# Convert to simple LRC
+ass2lrc convert song.ass --simple
+
+# Specify output file
+ass2lrc convert song.ass -o lyrics.lrc
+
+# Custom line gap (0.5 seconds)
+ass2lrc convert song.ass --gap 0.5
+
+# Compact format for repeated lyrics
+ass2lrc convert song.ass --compact
+
+# Enhanced LRC with custom gap
+ass2lrc convert song.ass -e -g 0.8 -o song.elrc
+
+# Simple LRC with no gap
+ass2lrc convert song.ass -s -g 0
+```
+
+#### `expand` - Expand Compact LRC
+
+Expand compact LRC format to standard sorted format.
+
+```bash
+ass2lrc expand [OPTIONS] INPUT_FILE
+```
+
+**Arguments:**
+
+- `INPUT_FILE` - Path to input compact LRC file (required)
+
+**Options:**
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--output` | `-o` | Output expanded LRC file path | Input with `_expanded` suffix |
+| `--help` | | Show help message | - |
+
+**Examples:**
+
+```bash
+# Expand compact LRC to standard format
 ass2lrc expand compact.lrc
 
 # Specify output file
 ass2lrc expand compact.lrc -o expanded.lrc
 ```
 
-### Examples
-
-**Enhanced LRC with custom gap:**
+### Global Options
 
 ```bash
-ass2lrc convert song.ass -e -g 0.8 -o song.elrc
-```
+# Show version
+ass2lrc --version
 
-**Simple LRC with no gap:**
+# Show help
+ass2lrc --help
 
-```bash
-ass2lrc convert song.ass --simple --gap 0
-```
-
-**Compact format (for repeated choruses):**
-
-```bash
-ass2lrc convert song.ass --compact -o song_compact.lrc
-```
-
-**Expand compact to standard:**
-
-```bash
-ass2lrc expand song_compact.lrc
+# Show help for specific command
+ass2lrc convert --help
+ass2lrc expand --help
 ```
 
 ## ASS Format Requirements
@@ -258,4 +291,3 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 **Example**: `feat(converter): Add compact LRC format support`
 
 Pre-commit hooks will automatically validate your commits. See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
-
