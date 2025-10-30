@@ -30,7 +30,8 @@
         "tests",
         "docs",
         "deps",
-        "config"
+        "config",
+        "readme"
       ]
     ],
     "subject-case": [2, "always", "sentence-case"],
