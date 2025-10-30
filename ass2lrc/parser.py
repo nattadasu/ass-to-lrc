@@ -117,3 +117,11 @@ class ASSParser:
             )
 
         return sorted(lyrics, key=lambda x: x.start_time)
+
+    def has_karaoke_timing(self) -> bool:
+        """Check if any lyrics have karaoke timing."""
+        lyrics = self.parse_lyrics()
+        return any(
+            lyric.syllables and any(syll.duration > 0 for syll in lyric.syllables)
+            for lyric in lyrics
+        )
