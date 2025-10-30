@@ -1,4 +1,18 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [commit]
+
+# Optimize performance
+ci:
+  autofix_commit_msg: |
+    chore(pre-commit): Auto-fixes from pre-commit hooks
+  autoupdate_commit_msg: |
+    chore(pre-commit): Update pre-commit hooks
+
 repos:
+  # Fast basic checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -6,30 +20,39 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
-      - id: check-json
       - id: check-toml
       - id: check-merge-conflict
-      - id: mixed-line-ending
 
+  # Ruff - extremely fast Python linter & formatter
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
+    rev: v0.8.4
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+  # Use local mypy for faster execution
+  - repo: local
     hooks:
       - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        require_serial: true
         args: [--ignore-missing-imports]
 
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+  # Use local markdownlint (already installed)
+  - repo: local
     hooks:
       - id: markdownlint
+        name: markdownlint
+        entry: markdownlint
+        language: system
+        types: [markdown]
         args: [--fix]
 
+  # Commitlint for commit messages
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.11.0
     hooks:

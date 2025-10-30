@@ -258,3 +258,4 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 **Example**: `feat(converter): Add compact LRC format support`
 
 Pre-commit hooks will automatically validate your commits. See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
+
