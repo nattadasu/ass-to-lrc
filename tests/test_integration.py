@@ -12,6 +12,7 @@ from ass2lrc.parser import ASSParser
 @pytest.fixture
 def full_ass_file(tmp_path: Path) -> Path:
     """Create a complete ASS file for integration testing."""
+    # fmt: off
     content = """[Script Info]
 Title: Integration Test
 ScriptType: v4.00+
@@ -28,7 +29,8 @@ Comment: 0,0:00:00.00,0:00:00.00,Default,lr,0,0,0,,Test Lyricist
 Dialogue: 0,0:00:10.00,0:00:15.00,Default,,0,0,0,,{\\K50}First{\\K50}line
 Dialogue: 0,0:00:16.00,0:00:20.00,Default,,0,0,0,,{\\K40}Second{\\K40}line
 Dialogue: 0,0:00:30.00,0:00:35.00,Default,,0,0,0,,{\\K50}First{\\K50}line
-"""
+""" # noqa: E501
+    # fmt: on
     file_path = tmp_path / "integration.ass"
     file_path.write_text(content, encoding="utf-8")
     return file_path
@@ -161,3 +163,33 @@ def test_multiple_conversions(full_ass_file: Path, tmp_path: Path) -> None:
     for file in [enhanced_file, simple_file, compact_file]:
         content = file.read_text(encoding="utf-8")
         assert "[ti:Integration Test Song]" in content
+
+
+def test_normal_sample_without_karaoke(tmp_path: Path) -> None:
+    """Test conversion of ASS file without karaoke timing."""
+    normal_sample = Path(__file__).parent / "test_normal_sample.ass"
+    output_file = tmp_path / "normal_output.lrc"
+
+    # Parse
+    parser = ASSParser(normal_sample)
+    lyrics = parser.parse_lyrics()
+
+    # Should have lyrics
+    assert len(lyrics) > 0
+
+    # Should not have karaoke timing
+    assert not parser.has_karaoke_timing()
+
+    # Convert to simple LRC
+    converter = LRCConverter(
+        metadata=parser.metadata,
+        enhanced=False,
+        line_gap=1.0,
+    )
+    converter.convert(lyrics, output_file)
+
+    # Verify
+    content = output_file.read_text(encoding="utf-8")
+    assert "[00:46.07]" in content
+    assert "نار في نار عم تولع حْوَالينا" in content
+    assert "<" not in content  # No enhanced timing tags
