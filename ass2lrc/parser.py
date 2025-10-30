@@ -98,6 +98,7 @@ class ASSParser:
 
             # Convert time to seconds
             start_time = event.start.total_seconds()
+            end_time = event.end.total_seconds()
 
             # Parse karaoke tags
             syllables = self._parse_karaoke_tags(event.text, start_time)
@@ -113,6 +114,7 @@ class ASSParser:
                     style=event.style,
                     name=event.name,
                     effect=event.effect,
+                    original_end_time=end_time,
                 )
             )
 

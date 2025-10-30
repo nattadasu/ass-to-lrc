@@ -27,12 +27,15 @@ class LyricLine:
     style: str = "Default"
     name: str = ""
     effect: str = ""
+    original_end_time: float | None = None
 
     @property
     def end_time(self) -> float:
-        """Calculate end time based on last syllable."""
-        if self.syllables:
+        """Calculate end time based on last syllable or original end time."""
+        if self.syllables and self.syllables[-1].duration > 0:
             return self.syllables[-1].end_time
+        if self.original_end_time is not None:
+            return self.original_end_time
         return self.start_time
 
 
