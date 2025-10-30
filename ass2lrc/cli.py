@@ -106,6 +106,14 @@ def convert(
             typer.echo("⚠️  No lyrics found in ASS file", err=True)
             raise typer.Exit(1)
 
+        # Auto-fallback to simple format if no karaoke timing
+        if enhanced and not parser.has_karaoke_timing():
+            typer.echo(
+                "ℹ️  No karaoke timing detected. Automatically using simple format.",
+                err=True,
+            )
+            enhanced = False
+
         # Determine output file
         if output_file is None:
             extension = ".elrc" if enhanced else ".lrc"
