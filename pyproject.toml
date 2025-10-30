@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Natsu Tadama", email = "git@nattadasu.my.id"},
+    {name = "Natsu Tadama", email = "nattadasu@nattadasu.my.id"},
 ]
 keywords = ["ass", "lrc", "lyrics", "subtitle", "karaoke", "converter"]
 classifiers = [
