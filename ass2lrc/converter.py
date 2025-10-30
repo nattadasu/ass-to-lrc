@@ -121,18 +121,17 @@ class LRCConverter:
         for i, lyric in enumerate(lyrics):
             lines.append(self._generate_line(lyric))
 
-            # Add gap line if configured and there's a significant gap
-            if self.line_gap > 0:
-                gap_time = lyric.end_time + self.line_gap
-                # Only add gap if it's before the next line (if any)
-                next_lyrics = [line for line in lyrics if line.start_time > lyric.end_time]
-                if next_lyrics and gap_time < next_lyrics[0].start_time:
-                    lines.append(self._format_timestamp(gap_time))
+            # Add gap line if there's a significant gap to the next line
+            if self.line_gap > 0 and i < len(lyrics) - 1:
+                next_lyric = lyrics[i + 1]
+                gap_duration = next_lyric.start_time - lyric.end_time
+                # Only add gap if the actual gap exceeds the threshold
+                if gap_duration > self.line_gap:
+                    lines.append(self._format_timestamp(lyric.end_time))
 
         # Add empty timestamped line at the end based on last singable line
         if lyrics:
-            last_line_end = lyrics[-1].end_time + self.line_gap
-            lines.append(self._format_timestamp(last_line_end))
+            lines.append(self._format_timestamp(lyrics[-1].end_time))
 
         # Write to file
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -172,11 +171,13 @@ class LRCConverter:
         # Add gap lines if configured
         if self.line_gap > 0:
             gap_times = []
-            for lyric in lyrics:
-                gap_time = lyric.end_time + self.line_gap
-                next_lyrics = [line for line in lyrics if line.start_time > lyric.end_time]
-                if next_lyrics and gap_time < next_lyrics[0].start_time:
-                    gap_times.append(gap_time)
+            for i, lyric in enumerate(lyrics):
+                if i < len(lyrics) - 1:
+                    next_lyric = lyrics[i + 1]
+                    gap_duration = next_lyric.start_time - lyric.end_time
+                    # Only add gap if the actual gap exceeds the threshold
+                    if gap_duration > self.line_gap:
+                        gap_times.append(lyric.end_time)
 
             if gap_times:
                 gap_line = "".join(self._format_timestamp(t) for t in sorted(gap_times))
@@ -184,8 +185,7 @@ class LRCConverter:
 
         # Add empty timestamped line at the end
         if lyrics:
-            last_line_end = lyrics[-1].end_time + self.line_gap
-            lines.append(self._format_timestamp(last_line_end))
+            lines.append(self._format_timestamp(lyrics[-1].end_time))
 
         # Write to file
         output_path.parent.mkdir(parents=True, exist_ok=True)
