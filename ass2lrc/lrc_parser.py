@@ -77,8 +77,7 @@ class LRCParser:
 
     def _parse_enhanced_line(self, timestamp: float, text: str) -> LyricLine:
         """Parse enhanced LRC with inline timestamps."""
-        syllables = []
-        current_time = timestamp
+        syllables: list[Syllable] = []
 
         # Pattern to match inline timestamps and text between them
         pattern = r"<(\d+:\d+\.\d+)>([^<]*)"
@@ -93,9 +92,7 @@ class LRCParser:
                 syllables[-1].duration = inline_time - syllables[-1].start_time
 
             if content:
-                syllables.append(
-                    Syllable(text=content, start_time=inline_time, duration=0)
-                )
+                syllables.append(Syllable(text=content, start_time=inline_time, duration=0))
 
         # Clean text for plain display
         plain_text = re.sub(r"<\d+:\d+\.\d+>", "", text)
