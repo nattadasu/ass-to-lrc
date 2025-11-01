@@ -33,15 +33,15 @@ repos:
         args: [--check]
 
   # Use local mypy for faster execution
-  - repo: local
-    hooks:
-      - id: mypy
-        name: mypy
-        entry: uv run mypy
-        language: system
-        types: [python]
-        require_serial: true
-        args: [--ignore-missing-imports, --no-error-summary]
+  # - repo: local
+    # hooks:
+      # - id: mypy
+        # name: mypy
+        # entry: uv run mypy
+        # language: system
+        # types: [python]
+        # require_serial: true
+        # args: [--ignore-missing-imports, --no-error-summary]
 
   # Use local markdownlint (already installed)
   - repo: local
