@@ -7,8 +7,10 @@ from typing import Annotated
 import typer
 
 from . import __version__
+from .ass_converter import ASSConverter
 from .converter import LRCConverter
 from .expander import LRCExpander
+from .lrc_parser import LRCParser
 from .parser import ASSParser
 
 # Configure logging
@@ -194,6 +196,83 @@ def expand(
         expander.expand(input_file, output_file)
 
         typer.echo(f"✓ Successfully expanded to {output_file}")
+
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command()
+def lrc2ass(
+    input_file: Annotated[
+        Path,
+        typer.Argument(
+            help="Input LRC file path",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            resolve_path=True,
+        ),
+    ],
+    output_file: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output ASS file path (default: same as input with .ass extension)",
+        ),
+    ] = None,
+    with_karaoke: Annotated[
+        bool,
+        typer.Option(
+            "--karaoke/--no-karaoke",
+            "-k/-K",
+            help="Generate karaoke timing tags from enhanced LRC (default: enabled)",
+        ),
+    ] = True,
+) -> None:
+    """
+    Convert LRC lyrics file to ASS subtitle format.
+
+    Converts both simple and enhanced LRC files to ASS format.
+    Enhanced LRC with inline timestamps will generate karaoke timing tags.
+    """
+    try:
+        # Parse LRC file
+        typer.echo(f"Parsing {input_file}...")
+        parser = LRCParser(input_file)
+        lyrics = parser.parse_lyrics()
+
+        if not lyrics:
+            typer.echo("⚠️  No lyrics found in LRC file", err=True)
+            raise typer.Exit(1)
+
+        # Check for enhanced timing
+        if with_karaoke and not parser.has_enhanced_timing():
+            typer.echo(
+                "ℹ️  No enhanced timing detected. Generating simple ASS format.",
+                err=True,
+            )
+            with_karaoke = False
+
+        # Determine output file
+        if output_file is None:
+            output_file = input_file.with_suffix(".ass")
+
+        # Convert to ASS
+        typer.echo(f"Converting to ASS {'with karaoke tags' if with_karaoke else 'format'}...")
+        converter = ASSConverter(
+            metadata=parser.metadata,
+            with_karaoke=with_karaoke,
+        )
+        converter.convert(lyrics, output_file)
+
+        typer.echo(f"✓ Successfully converted to {output_file}")
+        typer.echo(f"  Lines: {len(lyrics)}")
+        if parser.metadata.artist:
+            typer.echo(f"  Artist: {parser.metadata.artist}")
+        if parser.metadata.title:
+            typer.echo(f"  Title: {parser.metadata.title}")
 
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
