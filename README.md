@@ -7,12 +7,15 @@ for enhanced word-level timing.
 
 - **OOP Design**: Clean, maintainable object-oriented architecture with dedicated classes for parsing, conversion, and
   data models
+- **Bidirectional Conversion**: Convert between ASS and LRC formats
 - **Enhanced LRC**: Generates `.elrc` files with word-level timing from `\K` karaoke tags
 - **Simple LRC**: Standard LRC format without word timing
 - **Compact Format**: Merge repeated lyrics with multiple timestamps (e.g., choruses)
 - **Expand Command**: Convert compact LRC back to standard sorted format
+- **LRC to ASS**: Convert LRC files back to ASS format with karaoke timing support
 - **Metadata Support**: Automatically extracts and converts metadata tags (artist, lyricist, album, etc.)
 - **Comment Events**: Support both ASS Comment events and effect=tag for metadata
+- **Effect-Based Line Breaks**: Automatically add line breaks when effect contains "break"
 - **Configurable Gaps**: Add customizable gaps between lyric lines
 - **Typer CLI**: Modern, user-friendly command-line interface with subcommands
 
@@ -113,6 +116,40 @@ ass2lrc expand compact.lrc
 ass2lrc expand compact.lrc -o expanded.lrc
 ```
 
+#### `lrc2ass` - Convert LRC to ASS
+
+Convert LRC lyrics files back to ASS subtitle format.
+
+```bash
+ass2lrc lrc2ass [OPTIONS] INPUT_FILE
+```
+
+**Arguments:**
+
+- `INPUT_FILE` - Path to input LRC file (required)
+
+**Options:**
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--output` | `-o` | Output ASS file path | Same as input with `.ass` extension |
+| `--karaoke` | `-k` | Generate karaoke timing tags from enhanced LRC | `enabled` |
+| `--no-karaoke` | `-K` | Disable karaoke tags (plain text only) | `disabled` |
+| `--help` | | Show help message | - |
+
+**Examples:**
+
+```bash
+# Convert enhanced LRC to ASS with karaoke tags
+ass2lrc lrc2ass song.elrc
+
+# Convert simple LRC to ASS without karaoke
+ass2lrc lrc2ass song.lrc --no-karaoke
+
+# Specify output file
+ass2lrc lrc2ass lyrics.lrc -o subtitles.ass
+```
+
 ### Global Options
 
 ```bash
@@ -125,6 +162,7 @@ ass2lrc --help
 # Show help for specific command
 ass2lrc convert --help
 ass2lrc expand --help
+ass2lrc lrc2ass --help
 ```
 
 ## ASS Format Requirements
@@ -171,6 +209,23 @@ Use `\K` or `\k` tags for syllable timing (in centiseconds):
 Dialogue: 0,0:00:00.62,0:00:07.52,Default,,0,0,0,,{\K72}Text{\K106}Here
 ```
 
+### Effect-Based Line Breaks
+
+Lines with an effect field containing "break" (case-insensitive) will automatically add an empty line after them in the LRC output:
+
+```ass
+Dialogue: 0,0:00:10.00,0:00:12.00,Default,,0,0,0,linebreak,First verse
+Dialogue: 0,0:00:13.00,0:00:15.00,Default,,0,0,0,,Second verse
+```
+
+This will produce:
+
+```lrc
+[00:10.00]First verse
+[00:12.00]
+[00:13.00]Second verse
+```
+
 ## Compact Format
 
 The compact format merges identical lyrics that appear at different times into a single line with multiple timestamps.
@@ -200,7 +255,9 @@ The application is structured using OOP principles:
 
 - **`models.py`**: Data classes for `Syllable`, `LyricLine`, and `Metadata`
 - **`parser.py`**: `ASSParser` class for parsing ASS files
+- **`lrc_parser.py`**: `LRCParser` class for parsing LRC files
 - **`converter.py`**: `LRCConverter` class for generating LRC output
+- **`ass_converter.py`**: `ASSConverter` class for generating ASS output
 - **`expander.py`**: `LRCExpander` class for expanding compact format
 - **`cli.py`**: Typer-based command-line interface
 
