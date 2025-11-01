@@ -121,8 +121,12 @@ class LRCConverter:
         for i, lyric in enumerate(lyrics):
             lines.append(self._generate_line(lyric))
 
+            # Add break line if effect contains "break"
+            if lyric.effect and "break" in lyric.effect.lower():
+                lines.append(self._format_timestamp(lyric.end_time))
+
             # Add gap line if there's a significant gap to the next line
-            if self.line_gap > 0 and i < len(lyrics) - 1:
+            elif self.line_gap > 0 and i < len(lyrics) - 1:
                 next_lyric = lyrics[i + 1]
                 gap_duration = next_lyric.start_time - lyric.end_time
                 # Only add gap if the actual gap exceeds the threshold
