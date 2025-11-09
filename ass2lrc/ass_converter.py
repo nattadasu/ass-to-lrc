@@ -54,6 +54,18 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
         title = self.metadata.title or "Default Aegisub file"
         return self.SCRIPT_INFO.format(title=title)
 
+    def _calculate_end_times(self, lyrics: list[LyricLine]) -> None:
+        """Calculate end times for lyrics based on next line's start time."""
+        for i, lyric in enumerate(lyrics):
+            # If end_time equals start_time (no proper end time set)
+            if lyric.end_time == lyric.start_time:
+                if i < len(lyrics) - 1:
+                    # Use the start time of the next line
+                    lyric.original_end_time = lyrics[i + 1].start_time
+                else:
+                    # For the last line, add a reasonable duration (2 seconds)
+                    lyric.original_end_time = lyric.start_time + 2.0
+
     def _generate_dialogue_line(self, lyric: LyricLine) -> str:
         """Generate a Dialogue line for ASS format."""
         start = self._format_ass_time(lyric.start_time)
@@ -82,6 +94,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
             lyrics: List of lyric lines to convert
             output_path: Path to write ASS file
         """
+        # Calculate proper end times for lines
+        self._calculate_end_times(lyrics)
+
         lines = []
 
         # Add Script Info

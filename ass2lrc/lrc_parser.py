@@ -106,6 +106,7 @@ class LRCParser:
     def parse_lyrics(self) -> list[LyricLine]:
         """Parse all lyric lines from LRC file."""
         lyrics = []
+        empty_timestamps = []
 
         for line in self.lines:
             line = line.strip()
@@ -128,24 +129,48 @@ class LRCParser:
             # Parse the timestamp
             timestamp = self._parse_timestamp(timestamp_str)
 
-            # Skip empty lines (just timestamps)
+            # Collect empty lines (just timestamps) for end time calculation
             if not text:
+                empty_timestamps.append(timestamp)
                 continue
 
             # Check if enhanced LRC (has inline timestamps)
             if "<" in text and ">" in text:
-                lyrics.append(self._parse_enhanced_line(timestamp, text))
+                lyrics.append(self._parse_enhanced_line(timestamp, text.strip()))
             else:
                 # Simple LRC
                 lyrics.append(
                     LyricLine(
                         start_time=timestamp,
-                        text=text,
+                        text=text.strip(),
                         syllables=[],
                     )
                 )
 
-        return sorted(lyrics, key=lambda x: x.start_time)
+        # Sort lyrics and post-process to set end times
+        lyrics = sorted(lyrics, key=lambda x: x.start_time)
+        self._calculate_end_times(lyrics, empty_timestamps)
+        return lyrics
+
+    def _calculate_end_times(self, lyrics: list[LyricLine], empty_timestamps: list[float]) -> None:
+        """Calculate end times for lyrics based on next line's start time."""
+        for i, lyric in enumerate(lyrics):
+            # If line has syllables with timing
+            if lyric.syllables and lyric.syllables[-1].duration == 0:
+                # Determine the end time for the last syllable
+                if i < len(lyrics) - 1:
+                    # Use the start time of the next line
+                    next_start = lyrics[i + 1].start_time
+                    lyric.syllables[-1].duration = next_start - lyric.syllables[-1].start_time
+                else:
+                    # For the last line, check if there's an empty timestamp marker
+                    later_timestamps = [t for t in empty_timestamps if t > lyric.start_time]
+                    if later_timestamps:
+                        end_time = min(later_timestamps)
+                        lyric.syllables[-1].duration = end_time - lyric.syllables[-1].start_time
+                    else:
+                        # Default: use a reasonable duration (e.g., 2 seconds)
+                        lyric.syllables[-1].duration = 2.0
 
     def has_enhanced_timing(self) -> bool:
         """Check if any lyrics have enhanced inline timing."""
