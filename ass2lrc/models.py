@@ -28,6 +28,7 @@ class LyricLine:
     name: str = ""
     effect: str = ""
     original_end_time: float | None = None
+    is_comment: bool = False
 
     @property
     def end_time(self) -> float:
