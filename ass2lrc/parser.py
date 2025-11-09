@@ -11,9 +11,10 @@ from .models import LyricLine, Metadata, Syllable
 class ASSParser:
     """Parser for ASS subtitle files."""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path, include_comments: bool = False):
         """Initialize parser with ASS file path."""
         self.file_path = file_path
+        self.include_comments = include_comments
         with open(file_path, encoding="utf-8-sig") as f:
             self.doc = ass.parse(f)
         self.metadata = Metadata()
@@ -91,9 +92,15 @@ class ASSParser:
         lyrics = []
 
         for event in self.doc.events:
-            # Skip Comment events and metadata tag lines
+            # Check if this is a Comment event
             is_comment_event = type(event).__name__ == "Comment"
-            if is_comment_event or event.effect == "tag":
+
+            # Skip metadata tag lines
+            if event.effect == "tag":
+                continue
+
+            # Skip Comment events unless include_comments is enabled
+            if is_comment_event and not self.include_comments:
                 continue
 
             # Convert time to seconds
@@ -115,6 +122,7 @@ class ASSParser:
                     name=event.name,
                     effect=event.effect,
                     original_end_time=end_time,
+                    is_comment=is_comment_event,
                 )
             )
 
