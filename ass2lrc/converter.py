@@ -17,6 +17,7 @@ class LRCConverter:
         enhanced: bool = True,
         line_gap: float = 1.0,
         compact: bool = False,
+        include_comments: bool = False,
     ):
         """
         Initialize LRC converter.
@@ -26,11 +27,13 @@ class LRCConverter:
             enhanced: Whether to generate enhanced LRC with word timing
             line_gap: Gap in seconds to add between lines
             compact: Whether to use compact format (multiple timestamps per line)
+            include_comments: Whether to include comment lines
         """
         self.metadata = metadata or Metadata()
         self.enhanced = enhanced
         self.line_gap = line_gap
         self.compact = compact
+        self.include_comments = include_comments
 
         # Disable enhanced timing if compact mode is used
         if self.compact and self.enhanced:
@@ -75,12 +78,20 @@ class LRCConverter:
         # Add comments at the end
         if self.metadata.comments is not None:
             for comment in self.metadata.comments:
-                tags.append(f"[#:{comment}]")
+                tags.append(f"[#]{comment}")
 
         return tags
 
-    def _generate_line(self, lyric: LyricLine) -> str:
+    def _generate_line(self, lyric: LyricLine) -> str | None:
         """Generate a single LRC line with optional enhanced timing."""
+        # Skip comment lines if not including comments
+        if lyric.is_comment and not self.include_comments:
+            return None
+
+        # Handle comment lines (no timestamp in LRC)
+        if lyric.is_comment:
+            return f"[#]{lyric.text}"
+
         timestamp = self._format_timestamp(lyric.start_time)
 
         if not self.enhanced or not lyric.syllables:
@@ -119,7 +130,13 @@ class LRCConverter:
 
         # Add lyric lines
         for i, lyric in enumerate(lyrics):
-            lines.append(self._generate_line(lyric))
+            line = self._generate_line(lyric)
+            if line is not None:
+                lines.append(line)
+
+            # Skip gap/break logic for comment lines
+            if lyric.is_comment:
+                continue
 
             # Add break line if effect contains "break"
             if lyric.effect and "break" in lyric.effect.lower():
@@ -128,14 +145,39 @@ class LRCConverter:
             # Add gap line if there's a significant gap to the next line
             elif self.line_gap > 0 and i < len(lyrics) - 1:
                 next_lyric = lyrics[i + 1]
-                gap_duration = next_lyric.start_time - lyric.end_time
-                # Only add gap if the actual gap exceeds the threshold
-                if gap_duration > self.line_gap:
-                    lines.append(self._format_timestamp(lyric.end_time))
 
-        # Add empty timestamped line at the end based on last singable line
+                # In simple mode, use original_end_time instead of syllable-based end_time
+                # This makes the output more readable by using the ASS line timing
+                current_end = (
+                    lyric.original_end_time
+                    if (not self.enhanced and lyric.original_end_time)
+                    else lyric.end_time
+                )
+
+                # Calculate gap to next line (comment or dialogue)
+                gap_duration = next_lyric.start_time - current_end
+
+                # Add gap if the actual gap meets or exceeds the threshold
+                if gap_duration >= self.line_gap:
+                    lines.append(self._format_timestamp(current_end))
+
+        # Add empty timestamped line at the end based on last dialogue line
         if lyrics:
-            lines.append(self._format_timestamp(lyrics[-1].end_time))
+            # Find the last non-comment line
+            last_dialogue = None
+            for lyric in reversed(lyrics):
+                if not lyric.is_comment:
+                    last_dialogue = lyric
+                    break
+
+            if last_dialogue:
+                # In simple mode, use original_end_time for more readable output
+                end_time = (
+                    last_dialogue.original_end_time
+                    if (not self.enhanced and last_dialogue.original_end_time)
+                    else last_dialogue.end_time
+                )
+                lines.append(self._format_timestamp(end_time))
 
         # Write to file
         output_path.parent.mkdir(parents=True, exist_ok=True)
