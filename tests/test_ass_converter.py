@@ -151,7 +151,6 @@ def test_ass_file_structure(tmp_path: Path, sample_lyrics: list[LyricLine]) -> N
     lines = content.split("\n")
 
     # Check for proper section separation
-    script_info_idx = next(i for i, line in enumerate(lines) if "[Script Info]" in line)
     styles_idx = next(i for i, line in enumerate(lines) if "[V4+ Styles]" in line)
     events_idx = next(i for i, line in enumerate(lines) if "[Events]" in line)
 

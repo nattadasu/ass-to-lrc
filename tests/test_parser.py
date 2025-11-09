@@ -25,7 +25,7 @@ Comment: 0,0:00:00.00,0:00:00.00,Default,ar,0,0,0,,Test Artist
 Comment: 0,0:00:00.00,0:00:00.00,Default,#,0,0,0,,This is a comment
 Dialogue: 0,0:00:10.00,0:00:15.00,Default,,0,0,0,,{\\K50}Test{\\K50}lyrics{\\K50}here
 Dialogue: 0,0:00:16.00,0:00:20.00,Default,,0,0,0,,Plain lyrics without timing
-"""
+"""  # noqa: E501
     file_path = tmp_path / "test.ass"
     file_path.write_text(ass_content, encoding="utf-8")
     return file_path
@@ -46,7 +46,7 @@ Style: Default,Arial,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 Dialogue: 0,0:00:00.00,0:00:02.00,Default,lr,0,0,0,tag,Test Lyricist
 Dialogue: 0,0:00:10.00,0:00:15.00,Default,,0,0,0,,Test lyrics
-"""
+"""  # noqa: E501
     file_path = tmp_path / "test_tag.ass"
     file_path.write_text(ass_content, encoding="utf-8")
     return file_path
