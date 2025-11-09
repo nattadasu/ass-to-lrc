@@ -67,7 +67,7 @@ def test_generate_metadata_tags(sample_metadata: Metadata) -> None:
     assert "[ti:Test Song]" in tags
     assert "[ar:Test Artist]" in tags
     assert "[al:Test Album]" in tags
-    assert "[#:Test comment]" in tags
+    assert "[#]Test comment" in tags
 
 
 def test_enhanced_lrc_generation(
