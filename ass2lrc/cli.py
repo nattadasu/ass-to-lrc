@@ -81,6 +81,13 @@ def convert(
             min=0.0,
         ),
     ] = 1.0,
+    include_comments: Annotated[
+        bool,
+        typer.Option(
+            "--comment",
+            help="Include ASS comment events as LRC [#] comment lines",
+        ),
+    ] = False,
     version: Annotated[
         bool | None,
         typer.Option(
@@ -101,7 +108,7 @@ def convert(
     try:
         # Parse ASS file
         typer.echo(f"Parsing {input_file}...")
-        parser = ASSParser(input_file)
+        parser = ASSParser(input_file, include_comments=include_comments)
         lyrics = parser.parse_lyrics()
 
         if not lyrics:
@@ -143,6 +150,7 @@ def convert(
             enhanced=enhanced,
             line_gap=line_gap,
             compact=compact,
+            include_comments=include_comments,
         )
         converter.convert(lyrics, output_file)
 
@@ -230,6 +238,13 @@ def lrc2ass(
             help="Generate karaoke timing tags from enhanced LRC (default: enabled)",
         ),
     ] = True,
+    include_comments: Annotated[
+        bool,
+        typer.Option(
+            "--comment",
+            help="Include LRC [#] comment lines as ASS comment events",
+        ),
+    ] = False,
 ) -> None:
     """
     Convert LRC lyrics file to ASS subtitle format.
@@ -240,7 +255,7 @@ def lrc2ass(
     try:
         # Parse LRC file
         typer.echo(f"Parsing {input_file}...")
-        parser = LRCParser(input_file)
+        parser = LRCParser(input_file, include_comments=include_comments)
         lyrics = parser.parse_lyrics()
 
         if not lyrics:
@@ -264,6 +279,7 @@ def lrc2ass(
         converter = ASSConverter(
             metadata=parser.metadata,
             with_karaoke=with_karaoke,
+            include_comments=include_comments,
         )
         converter.convert(lyrics, output_file)
 
