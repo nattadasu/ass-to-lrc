@@ -30,16 +30,23 @@ Style: Default,Arial,48,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,
     EVENTS_HEADER = """[Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"""
 
-    def __init__(self, metadata: Metadata | None = None, with_karaoke: bool = True):
+    def __init__(
+        self,
+        metadata: Metadata | None = None,
+        with_karaoke: bool = True,
+        include_comments: bool = False,
+    ):
         """
         Initialize ASS converter.
 
         Args:
             metadata: Metadata to include in ASS file
             with_karaoke: Whether to generate karaoke timing tags
+            include_comments: Whether to include comment lines
         """
         self.metadata = metadata or Metadata()
         self.with_karaoke = with_karaoke
+        self.include_comments = include_comments
 
     @staticmethod
     def _format_ass_time(seconds: float) -> str:
@@ -66,8 +73,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
                     # For the last line, add a reasonable duration (2 seconds)
                     lyric.original_end_time = lyric.start_time + 2.0
 
-    def _generate_dialogue_line(self, lyric: LyricLine) -> str:
-        """Generate a Dialogue line for ASS format."""
+    def _generate_dialogue_line(self, lyric: LyricLine) -> str | None:
+        """Generate a Dialogue or Comment line for ASS format."""
+        # Skip comment lines if not including comments
+        if lyric.is_comment and not self.include_comments:
+            return None
+
         start = self._format_ass_time(lyric.start_time)
         end = self._format_ass_time(lyric.end_time)
         style = lyric.style or "Default"
@@ -75,7 +86,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
         effect = lyric.effect or ""
 
         # Generate text with karaoke tags if available
-        if self.with_karaoke and lyric.syllables:
+        if self.with_karaoke and lyric.syllables and not lyric.is_comment:
             text_parts = []
             for syllable in lyric.syllables:
                 duration_cs = int(syllable.duration * 100)
@@ -84,7 +95,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
         else:
             text = lyric.text
 
-        return f"Dialogue: 0,{start},{end},{style},{name},0,0,0,{effect},{text}"
+        # Use Comment event type for comment lines
+        event_type = "Comment" if lyric.is_comment else "Dialogue"
+        return f"{event_type}: 0,{start},{end},{style},{name},0,0,0,{effect},{text}"
 
     def convert(self, lyrics: list[LyricLine], output_path: Path) -> None:
         """
@@ -112,7 +125,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
 
         # Add dialogue lines
         for lyric in lyrics:
-            lines.append(self._generate_dialogue_line(lyric))
+            line = self._generate_dialogue_line(lyric)
+            if line is not None:
+                lines.append(line)
 
         # Write to file
         output_path.parent.mkdir(parents=True, exist_ok=True)
