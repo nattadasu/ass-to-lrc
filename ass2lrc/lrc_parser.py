@@ -9,9 +9,10 @@ from .models import LyricLine, Metadata, Syllable
 class LRCParser:
     """Parser for LRC lyrics files."""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path, include_comments: bool = False):
         """Initialize parser with LRC file path."""
         self.file_path = file_path
+        self.include_comments = include_comments
         self.metadata = Metadata()
         self.lines: list[str] = []
         self._load_file()
@@ -117,6 +118,20 @@ class LRCParser:
             if self._parse_metadata(line):
                 continue
 
+            # Check if this is a comment line (no timestamp) [#]text
+            if line.startswith("[#]"):
+                if self.include_comments:
+                    text = line[3:]  # Remove [#] prefix
+                    lyrics.append(
+                        LyricLine(
+                            start_time=0.0,  # Use 0.0 for comment lines
+                            text=text,
+                            syllables=[],
+                            is_comment=True,
+                        )
+                    )
+                continue
+
             # Match timestamp(s) and text
             # Pattern for [mm:ss.xx]text or [mm:ss.xx]
             match = re.match(r"(\[[\d:\.]+\])(.*)$", line)
@@ -136,7 +151,8 @@ class LRCParser:
 
             # Check if enhanced LRC (has inline timestamps)
             if "<" in text and ">" in text:
-                lyrics.append(self._parse_enhanced_line(timestamp, text.strip()))
+                lyric = self._parse_enhanced_line(timestamp, text.strip())
+                lyrics.append(lyric)
             else:
                 # Simple LRC
                 lyrics.append(
