@@ -85,7 +85,7 @@ def convert(
         bool,
         typer.Option(
             "--comment",
-            help="Include ASS comment events as LRC [#] comment lines",
+            help="Include ASS comment events as LRC comment lines",
         ),
     ] = False,
     version: Annotated[
@@ -242,7 +242,7 @@ def lrc2ass(
         bool,
         typer.Option(
             "--comment",
-            help="Include LRC [#] comment lines as ASS comment events",
+            help="Include LRC comment lines as ASS comment events",
         ),
     ] = False,
 ) -> None:
