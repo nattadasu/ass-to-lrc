@@ -88,6 +88,13 @@ def convert(
             help="Include ASS comment events as LRC comment lines",
         ),
     ] = False,
+    no_force_break: Annotated[
+        bool,
+        typer.Option(
+            "--no-force-break",
+            help="Disable forced break lines from 'break' effect",
+        ),
+    ] = False,
     version: Annotated[
         bool | None,
         typer.Option(
@@ -151,6 +158,7 @@ def convert(
             line_gap=line_gap,
             compact=compact,
             include_comments=include_comments,
+            no_force_break=no_force_break,
         )
         converter.convert(lyrics, output_file)
 

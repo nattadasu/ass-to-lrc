@@ -18,6 +18,7 @@ class LRCConverter:
         line_gap: float = 1.0,
         compact: bool = False,
         include_comments: bool = False,
+        no_force_break: bool = False,
     ):
         """
         Initialize LRC converter.
@@ -28,12 +29,14 @@ class LRCConverter:
             line_gap: Gap in seconds to add between lines
             compact: Whether to use compact format (multiple timestamps per line)
             include_comments: Whether to include comment lines
+            no_force_break: Whether to disable forced break lines
         """
         self.metadata = metadata or Metadata()
         self.enhanced = enhanced
         self.line_gap = line_gap
         self.compact = compact
         self.include_comments = include_comments
+        self.no_force_break = no_force_break
 
         # Disable enhanced timing if compact mode is used
         if self.compact and self.enhanced:
@@ -140,7 +143,8 @@ class LRCConverter:
 
             # Add break line if effect contains "break"
             if lyric.effect and "break" in lyric.effect.lower():
-                lines.append(self._format_timestamp(lyric.end_time))
+                if not self.no_force_break:
+                    lines.append(self._format_timestamp(lyric.end_time))
 
             # Add gap line if there's a significant gap to the next line
             elif self.line_gap > 0 and i < len(lyrics) - 1:
